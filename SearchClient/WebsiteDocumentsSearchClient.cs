@@ -32,9 +32,7 @@ namespace SearchClient
             return _serviceClient.Indexes.GetClient(_indexName);
         }
 
-        // Create an index whose fields correspond to the properties of the ContentItemsSearchItem class.
-        // The Address property of ContentItemsSearchItem will be modeled as a complex field.
-        // The properties of the Address class in turn correspond to sub-fields of the Address complex field.
+        // Create an index whose fields correspond to the properties of the WebsiteDocument class.
         // The fields of the index are defined by calling the FieldBuilder.BuildForType() method.
         private static void CreateIndex(string indexName, SearchServiceClient serviceClient)
         {
@@ -74,19 +72,29 @@ namespace SearchClient
 
         public void CreateIndexer()
         {
-            var maps = new List<FieldMapping>();
+            var mapping = new List<FieldMapping>();
         
-            maps.Add(new FieldMapping( sourceFieldName: "metadata_storage_name", targetFieldName: "file_name" ));
-            maps.Add(new FieldMapping( sourceFieldName: "metadata_storage_path", targetFieldName: "url" ));
-            maps.Add(new FieldMapping( sourceFieldName: "metadata_storage_size", targetFieldName: "size" ));
-            maps.Add(new FieldMapping( sourceFieldName: "metadata_storage_last_modified", targetFieldName: "last_modified" ));
+            mapping.Add(new FieldMapping( sourceFieldName: "metadata_storage_name", targetFieldName: "file_name" ));
+            mapping.Add(new FieldMapping( sourceFieldName: "metadata_storage_path", targetFieldName: "url" ));
+            mapping.Add(new FieldMapping( sourceFieldName: "metadata_storage_size", targetFieldName: "size" ));
+            mapping.Add(new FieldMapping( sourceFieldName: "metadata_storage_last_modified", targetFieldName: "last_modified" ));
+
+            var outputMapping = new List<FieldMapping>();
+        
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/sentiment_score", targetFieldName: "Sentiment_score" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/persons/*", targetFieldName: "Persons" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/locations/*", targetFieldName: "Locations" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/key_phrases/*", targetFieldName: "Key_phrases" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/urls/*", targetFieldName: "Urls" ));
 
             Indexer blobIndexer = new Indexer(
                 name: "website-indexer",
                 dataSourceName: "websitedocs",
                 targetIndexName: "website-documents-index",
-                fieldMappings: maps,
-                schedule: new IndexingSchedule(TimeSpan.FromDays(1)));
+                fieldMappings: mapping,
+                skillsetName: "test003",
+                schedule: new IndexingSchedule(TimeSpan.FromDays(1)),
+                outputFieldMappings: outputMapping);
 
             if (_serviceClient.Indexers.Exists("website-indexer"))
             {
@@ -100,9 +108,41 @@ namespace SearchClient
         {
             _serviceClient.Indexers.Run("website-indexer");
 
-            Console.WriteLine("Indexing documents...\n");
+            Console.WriteLine("Indexing documents...");
 
             Thread.Sleep(10000);
+        }
+
+        public void RunQueries()
+        {
+            DocumentSearchResult<WebsiteDocument> result;
+
+            //The number of matching documents (hits) for a submitted search term
+            Console.WriteLine("Searching 'New York'...");
+
+            var sp = new SearchParameters()
+                {
+                    Select = new[] { "File_name", "Url", "Size", "Last_modified","Content" },
+                    IncludeTotalResultCount=true,
+                    SearchFields = new[] {"Content"}
+                };
+
+            result = _indexClient.Documents.Search<WebsiteDocument>("\"New York\"", sp);
+            long? count = result.Count;
+
+            Console.WriteLine("Results found: {0}",count);
+
+            PrintResults(result);
+        }
+
+        private static void PrintResults(DocumentSearchResult<WebsiteDocument> result)
+        {
+            foreach(var resultItem in result.Results)
+            {
+                WebsiteDocument doc = resultItem.Document;
+
+                Console.WriteLine("File name: {0}, Size: {1}, Sentiment: {2:0.###}", doc.File_name, doc.Size, doc.Sentiment_score);
+            }
         }
     }
 }
