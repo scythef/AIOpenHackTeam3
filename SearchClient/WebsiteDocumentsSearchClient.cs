@@ -130,6 +130,17 @@ namespace SearchClient
                     QueryType = QueryType.Full
                 };
             RunQuery(searchDescription, searchTerm, searchParameters);
+
+            searchDescription = "Filter search results to include only collateral documents that contain URLs.";
+            searchTerm = "*";
+            searchParameters = new SearchParameters()
+                {
+                    Select = new[] { "File_name", "Url", "Urls" },
+                    Filter = "search.ismatch('collateral', 'Url') and Urls/any()",
+                    SearchMode = SearchMode.All,
+                    QueryType = QueryType.Full
+                };
+            RunQuery(searchDescription, searchTerm, searchParameters);
         }
 
         private void RunQuery(string searchDescription, string searchTerm, SearchParameters searchParameters)
