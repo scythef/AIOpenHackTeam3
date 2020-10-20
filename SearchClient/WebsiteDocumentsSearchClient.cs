@@ -115,33 +115,50 @@ namespace SearchClient
 
         public void RunQueries()
         {
-            DocumentSearchResult<WebsiteDocument> result;
+            string searchDescription;
+            string searchTerm;
+            SearchParameters searchParameters;
 
-            //The number of matching documents (hits) for a submitted search term
-            Console.WriteLine("Searching 'New York'...");
-
-            var sp = new SearchParameters()
+            searchDescription = "Generic New York Search";
+            searchTerm = "New York";
+            searchParameters = new SearchParameters()
                 {
-                    Select = new[] { "File_name", "Url", "Size", "Last_modified","Content" },
+                    Select = new[] { "File_name", "Url", "Size", "Last_modified","Content","Sentiment_score","Key_phrases","Locations" },
                     IncludeTotalResultCount=true,
-                    SearchFields = new[] {"Content"}
+                    SearchFields = new[] {"Content"},
+                    OrderBy = new[] { "Sentiment_score desc" },
+                    QueryType = QueryType.Full
                 };
+            RunQuery(searchDescription, searchTerm, searchParameters);
+        }
 
-            result = _indexClient.Documents.Search<WebsiteDocument>("\"New York\"", sp);
-            long? count = result.Count;
+        private void RunQuery(string searchDescription, string searchTerm, SearchParameters searchParameters)
+        {
+            Console.WriteLine("================================================================================");
+            Console.WriteLine(searchDescription);
+            Console.WriteLine("Searching '{0}'...", searchTerm);
 
-            Console.WriteLine("Results found: {0}",count);
+            DocumentSearchResult<WebsiteDocument> result = _indexClient.Documents.Search<WebsiteDocument>("\"" + searchTerm + "\"", searchParameters);
 
             PrintResults(result);
         }
 
         private static void PrintResults(DocumentSearchResult<WebsiteDocument> result)
         {
+            long? count = result.Count;
+
+            Console.WriteLine("Results found: {0}",count);
+
             foreach(var resultItem in result.Results)
             {
                 WebsiteDocument doc = resultItem.Document;
 
-                Console.WriteLine("File name: {0}, Size: {1}, Sentiment: {2:0.###}", doc.File_name, doc.Size, doc.Sentiment_score);
+                Console.WriteLine("--------------------------------------------------------------------------------");
+                Console.WriteLine("Url         : {0}", doc.Url);
+                Console.WriteLine("File Name   : {0}", doc.File_name);
+                Console.WriteLine("Key Phrases : {0}", string.Join(", ",doc.Key_phrases));
+                Console.WriteLine("Locations   : {0}", string.Join(", ", doc.Locations));
+                Console.WriteLine("Sentiment   : {0}", doc.Sentiment_score);
             }
         }
     }
