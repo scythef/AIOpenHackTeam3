@@ -28,7 +28,6 @@ namespace AzureSearchAPI
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             name = name ?? data?.name;
 
-
             // Get the service endpoint and API key from the environment
             Uri endpoint = new Uri(Environment.GetEnvironmentVariable("SEARCH_ENDPOINT"));
             string key = Environment.GetEnvironmentVariable("SEARCH_API_KEY");
@@ -38,8 +37,8 @@ namespace AzureSearchAPI
             AzureKeyCredential credential = new AzureKeyCredential(key);
             SearchClient client = new SearchClient(endpoint, indexName, credential);
 
-            // Let's get the top 5 related to Microsoft
-            //            SearchResults<SearchDocument> response = client.Search<SearchDocument>("New York", new SearchOptions { Size = 5 });
+
+
 
             Console.WriteLine($"New York ----------------------------------------\n");
 
@@ -50,40 +49,51 @@ namespace AzureSearchAPI
                 Console.WriteLine($"{title}\n");
             }
 
+
+
+
             Console.WriteLine($"+London +Buckingham Palace ----------------------------------------\n");
 
             SearchResults<SearchDocument> response2 = client.Search<SearchDocument>("+\"London\" +\"Buckingham Palace\"", new SearchOptions { });
             foreach (SearchResult<SearchDocument> result in response2.GetResults())
             {
-                // Print out the title and job description (we'll see below how to
-                // use C# objects to make accessing these fields much easier)
                 string title = (string)result.Document["metadata_storage_name"];
-                //                string description = (string)result.Document["content"];
-                //                Console.WriteLine($"{title}\n{description}\n");
                 Console.WriteLine($"{title}\n");
             }
 
-            Console.WriteLine($"Las Vegas +reviews ----------------------------------------\n");
 
 
-            //TODO - not finished
 
-            var options = new SearchOptions() { };
 
-            // Enter Hotel property names into this list so only these values will be returned.
-            // If Select is empty, all values will be returned, which can be inefficient.
-            options.Select.Add("reviews");
 
-            SearchResults<SearchDocument> response3 = client.Search<SearchDocument>("Las Vegas", options);
-            foreach (SearchResult<SearchDocument> result in response3.GetResults())
-            {
-                // Print out the title and job description (we'll see below how to
-                // use C# objects to make accessing these fields much easier)
-                string title = (string)result.Document["metadata_storage_name"];
-                //                string description = (string)result.Document["content"];
-                //                Console.WriteLine($"{title}\n{description}\n");
-                Console.WriteLine($"{title}\n");
-            }
+
+
+
+
+
+
+
+            //Console.WriteLine($"Las Vegas +reviews ----------------------------------------\n");
+
+
+            ////TODO - not finished
+
+            //var options = new SearchOptions() { };
+
+            //// Enter Hotel property names into this list so only these values will be returned.
+            //// If Select is empty, all values will be returned, which can be inefficient.
+            //options.Select.Add("reviews");
+
+            //SearchResults<SearchDocument> response3 = client.Search<SearchDocument>("Las Vegas", options);
+            //foreach (SearchResult<SearchDocument> result in response3.GetResults())
+            //{
+            //    // Print out the title and job description (we'll see below how to
+            //    // use C# objects to make accessing these fields much easier)
+            //    string title = (string)result.Document["metadata_storage_name"];
+            //    //                string description = (string)result.Document["content"];
+            //    //                Console.WriteLine($"{title}\n{description}\n");
+            //    Console.WriteLine($"{title}\n");
+            //}
 
 
             string responseMessage = string.IsNullOrEmpty(name)
