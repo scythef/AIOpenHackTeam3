@@ -32,20 +32,20 @@ namespace AzureSearchAPI
             // Get the service endpoint and API key from the environment
             Uri endpoint = new Uri(Environment.GetEnvironmentVariable("SEARCH_ENDPOINT"));
             string key = Environment.GetEnvironmentVariable("SEARCH_API_KEY");
-            string indexName = "azureblob-index";
+            string indexName = "azureblob-index2";
 
             // Create a client
             AzureKeyCredential credential = new AzureKeyCredential(key);
             SearchClient client = new SearchClient(endpoint, indexName, credential);
 
             // Let's get the top 5 related to Microsoft
-            SearchResults<SearchDocument> response = client.Search<SearchDocument>("Microsoft", new SearchOptions { Size = 5 });
+            SearchResults<SearchDocument> response = client.Search<SearchDocument>("New York", new SearchOptions { Size = 5 });
             foreach (SearchResult<SearchDocument> result in response.GetResults())
             {
                 // Print out the title and job description (we'll see below how to
                 // use C# objects to make accessing these fields much easier)
-                string title = (string)result.Document["business_title"];
-                string description = (string)result.Document["job_description"];
+                string title = (string)result.Document["metadata_storage_name"];
+                string description = (string)result.Document["content"];
                 Console.WriteLine($"{title}\n{description}\n");
             }
 
