@@ -2,6 +2,7 @@ using Microsoft.Azure.Search;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace SearchClient
 {
@@ -45,6 +46,38 @@ namespace SearchClient
         public string Merged_text { get; set; }
         
         [IsSearchable]
-        public string Extracted_text { get; set; }
+        public string[] Extracted_text { get; set; }
+
+        [IsSearchable]
+        public string Categories { get; set; }
+
+        [IsSearchable]
+        public Tag[] Tags { get; set; }
+
+        [IsSearchable]
+        public string[] Description { get; set; }
+
+        [IsSearchable]
+        public string Faces { get; set; }
+
+        [IsSearchable]
+        public string Brands { get; set; }
+
+        [IsSearchable]
+        public string Objects { get; set; }
+        
+        [IsSearchable, IsFilterable]
+        public string[] Celebrities { get; set; }
+        
+        [IsSearchable, IsFilterable]
+        public string[] Landmarks { get; set; }
+    }
+
+    public class Tag
+    {
+        [IsSearchable]
+        public string Name { get; set; }
+
+        public double Confidence { get; set; }
     }
 }

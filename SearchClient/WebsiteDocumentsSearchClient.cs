@@ -88,6 +88,14 @@ namespace SearchClient
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/urls/*", targetFieldName: "Urls" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/merged_text", targetFieldName: "Merged_text" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/extracted_text", targetFieldName: "Extracted_text" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/categories", targetFieldName: "Categories" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/tags", targetFieldName: "Tags" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/description", targetFieldName: "Description" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/faces", targetFieldName: "Faces" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/brands", targetFieldName: "Brands" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/objects", targetFieldName: "Objects" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/categories/detail/celebrities/*", targetFieldName: "Celebrities" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/categories/detail/landmarks/*", targetFieldName: "Landmarks" ));
 
             // required in challenge 4, tell the indexer to create content, metadata and images
             IDictionary<string, object> idxrConfig = new Dictionary<string, object>();
