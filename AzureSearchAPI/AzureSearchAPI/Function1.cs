@@ -92,6 +92,43 @@ namespace AzureSearchAPI
                 Console.WriteLine($"{title} || {score}\n");
             }
 
+            Console.WriteLine($"Locations ----------------------------------------\n");
+
+            options = new SearchOptions()
+            {
+                Filter = "Locations/any(loc: loc eq 'Broadway')",
+            };
+            options.OrderBy.Add("Sentiment_score desc");
+
+            SearchResults<SearchDocument> response5 = client.Search<SearchDocument>("*", options);
+            foreach (SearchResult<SearchDocument> result in response5.GetResults())
+            {
+                string title = (string)result.Document["File_name"];
+                double score = (double)result.Document["Sentiment_score"];
+                string loc = "";// (List<string>)result.Document["Locations"]; 
+                Console.WriteLine($"{title} || {score}\n || {loc}\n");
+            }
+
+
+            Console.WriteLine($"Images Grand Canyon ----------------------------------------\n");
+
+            options = new SearchOptions()
+            {
+                Filter = "Locations/any(loc: loc eq 'Broadway')",
+            };
+
+            SearchResults<SearchDocument> response6 = client.Search<SearchDocument>("*", options);
+            foreach (SearchResult<SearchDocument> result in response6.GetResults())
+            {
+                //string title = (string)result.Document["File_name"];
+                //double score = (double)result.Document["Sentiment_score"];
+                //string loc = "";// (List<string>)result.Document["Locations"]; 
+                //string merged = (string)result.Document["Merged_text"];
+                string extracted = (string)result.Document["Extracted_text"];
+                string description = (string)result.Document["Description"];
+                Console.WriteLine($"{extracted}\n || {description}\n");
+            }
+
 
 
             //Console.WriteLine($"Las Vegas +reviews ----------------------------------------\n");
