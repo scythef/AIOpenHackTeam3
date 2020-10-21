@@ -99,6 +99,7 @@ namespace SearchClient
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/objects", targetFieldName: "Objects" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/categories/detail/celebrities/*", targetFieldName: "Celebrities" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/categories/detail/landmarks/*", targetFieldName: "Landmarks" ));
+            outputMapping.Add(new FieldMapping(sourceFieldName: "/document/top_words/*",targetFieldName:"top_words"));
 
             // required in challenge 4, tell the indexer to create content, metadata and images
             IDictionary<string, object> idxrConfig = new Dictionary<string, object>();
