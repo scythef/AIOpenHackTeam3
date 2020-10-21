@@ -32,9 +32,7 @@ namespace SearchClient
             return _serviceClient.Indexes.GetClient(_indexName);
         }
 
-        // Create an index whose fields correspond to the properties of the ContentItemsSearchItem class.
-        // The Address property of ContentItemsSearchItem will be modeled as a complex field.
-        // The properties of the Address class in turn correspond to sub-fields of the Address complex field.
+        // Create an index whose fields correspond to the properties of the WebsiteDocument class.
         // The fields of the index are defined by calling the FieldBuilder.BuildForType() method.
         private static void CreateIndex(string indexName, SearchServiceClient serviceClient)
         {
@@ -74,19 +72,45 @@ namespace SearchClient
 
         public void CreateIndexer()
         {
-            var maps = new List<FieldMapping>();
+            var mapping = new List<FieldMapping>();
         
-            maps.Add(new FieldMapping( sourceFieldName: "metadata_storage_name", targetFieldName: "file_name" ));
-            maps.Add(new FieldMapping( sourceFieldName: "metadata_storage_path", targetFieldName: "url" ));
-            maps.Add(new FieldMapping( sourceFieldName: "metadata_storage_size", targetFieldName: "size" ));
-            maps.Add(new FieldMapping( sourceFieldName: "metadata_storage_last_modified", targetFieldName: "last_modified" ));
+            mapping.Add(new FieldMapping( sourceFieldName: "metadata_storage_name", targetFieldName: "file_name" ));
+            mapping.Add(new FieldMapping( sourceFieldName: "metadata_storage_path", targetFieldName: "url" ));
+            mapping.Add(new FieldMapping( sourceFieldName: "metadata_storage_size", targetFieldName: "size" ));
+            mapping.Add(new FieldMapping( sourceFieldName: "metadata_storage_last_modified", targetFieldName: "last_modified" ));
+
+            var outputMapping = new List<FieldMapping>();
+        
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/sentiment_score", targetFieldName: "Sentiment_score" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/persons/*", targetFieldName: "Persons" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/locations/*", targetFieldName: "Locations" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/key_phrases/*", targetFieldName: "Key_phrases" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/urls/*", targetFieldName: "Urls" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/merged_text", targetFieldName: "Merged_text" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/extracted_text", targetFieldName: "Extracted_text" ));
+
+            // required in challenge 4, tell the indexer to create content, metadata and images
+            IDictionary<string, object> idxrConfig = new Dictionary<string, object>();
+            idxrConfig.Add(
+                key: "dataToExtract",
+                value: "contentAndMetadata");
+            idxrConfig.Add(
+                key: "imageAction",
+                value: "generateNormalizedImages"
+            );
 
             Indexer blobIndexer = new Indexer(
                 name: "website-indexer",
                 dataSourceName: "websitedocs",
                 targetIndexName: "website-documents-index",
-                fieldMappings: maps,
-                schedule: new IndexingSchedule(TimeSpan.FromDays(1)));
+                fieldMappings: mapping,
+                skillsetName: "test003",
+                schedule: new IndexingSchedule(TimeSpan.FromDays(1)),
+                parameters: new IndexingParameters(
+                    maxFailedItems: -1,
+                    maxFailedItemsPerBatch: -1,
+                    configuration: idxrConfig),
+                outputFieldMappings: outputMapping);
 
             if (_serviceClient.Indexers.Exists("website-indexer"))
             {
@@ -100,9 +124,69 @@ namespace SearchClient
         {
             _serviceClient.Indexers.Run("website-indexer");
 
-            Console.WriteLine("Indexing documents...\n");
+            Console.WriteLine("Indexing documents...");
 
             Thread.Sleep(10000);
+        }
+
+        public void RunQueries()
+        {
+            string searchDescription;
+            string searchTerm;
+            SearchParameters searchParameters;
+
+            searchDescription = "Generic New York Search";
+            searchTerm = "New York";
+            searchParameters = new SearchParameters()
+                {
+                    Select = new[] { "File_name", "Url", "Size", "Last_modified","Content","Sentiment_score","Key_phrases","Locations" },
+                    IncludeTotalResultCount=true,
+                    SearchFields = new[] {"Content"},
+                    OrderBy = new[] { "Sentiment_score desc" },
+                    QueryType = QueryType.Full
+                };
+            RunQuery(searchDescription, searchTerm, searchParameters);
+
+            searchDescription = "Filter search results to include only collateral documents that contain URLs.";
+            searchTerm = "*";
+            searchParameters = new SearchParameters()
+                {
+                    Select = new[] { "File_name", "Url", "Urls" },
+                    Filter = "search.ismatch('collateral', 'Url') and Urls/any()",
+                    SearchMode = SearchMode.All,
+                    QueryType = QueryType.Full
+                };
+            RunQuery(searchDescription, searchTerm, searchParameters);
+        }
+
+        private void RunQuery(string searchDescription, string searchTerm, SearchParameters searchParameters)
+        {
+            Console.WriteLine("================================================================================");
+            Console.WriteLine(searchDescription);
+            Console.WriteLine("Searching '{0}'...", searchTerm);
+
+            DocumentSearchResult<WebsiteDocument> result = _indexClient.Documents.Search<WebsiteDocument>("\"" + searchTerm + "\"", searchParameters);
+
+            PrintResults(result);
+        }
+
+        private static void PrintResults(DocumentSearchResult<WebsiteDocument> result)
+        {
+            long? count = result.Count;
+
+            Console.WriteLine("Results found: {0}",count);
+
+            foreach(var resultItem in result.Results)
+            {
+                WebsiteDocument doc = resultItem.Document;
+
+                Console.WriteLine("--------------------------------------------------------------------------------");
+                Console.WriteLine("Url         : {0}", doc.Url);
+                Console.WriteLine("File Name   : {0}", doc.File_name);
+                Console.WriteLine("Key Phrases : {0}", string.Join(", ",doc.Key_phrases));
+                Console.WriteLine("Locations   : {0}", string.Join(", ", doc.Locations));
+                Console.WriteLine("Sentiment   : {0}", doc.Sentiment_score);
+            }
         }
     }
 }

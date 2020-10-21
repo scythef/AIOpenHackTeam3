@@ -21,6 +21,7 @@ namespace SearchClient
 
             var searchClient = new WebsiteDocumentsSearchClient(searchServiceName, adminApiKey);
 
+
             Console.WriteLine("{0}", "Deleting index...");
             searchClient.DeleteIndexIfExists();
 
@@ -35,6 +36,9 @@ namespace SearchClient
 
             Console.WriteLine("{0}", "Running indexer...");
             searchClient.RunIndexer();
+
+            Console.WriteLine("{0}", "Executing queries...");
+            searchClient.RunQueries();
         }
     }
 }

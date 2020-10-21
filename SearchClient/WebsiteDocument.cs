@@ -25,5 +25,26 @@ namespace SearchClient
 
         [IsFilterable, IsSortable, IsFacetable]
         public DateTime Last_modified { get; set; }
+
+        [IsSortable, IsFacetable, IsFilterable]
+        public Double Sentiment_score { get; set; }
+
+        [IsSearchable]
+        public string[] Key_phrases { get; set; }
+
+        [IsSearchable, IsFilterable]
+        public string[] Persons { get; set; }
+        
+        [IsSearchable, IsFilterable]
+        public string[] Locations { get; set; }
+        
+        [IsSearchable, IsFilterable]
+        public string[] Urls { get; set; }
+
+        [IsSearchable]
+        public string Merged_text { get; set; }
+        
+        [IsSearchable]
+        public string Extracted_text { get; set; }
     }
 }
