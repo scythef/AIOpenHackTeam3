@@ -52,7 +52,7 @@ namespace SearchClient
         public string Categories { get; set; }
 
         [IsSearchable]
-        public Tag[] Tags { get; set; }
+        public string[] Tags { get; set; }
 
         [IsSearchable]
         public string[] Description { get; set; }
@@ -73,11 +73,22 @@ namespace SearchClient
         public string[] Landmarks { get; set; }
     }
 
-    public class Tag
+    public partial class Tag
     {
         [IsSearchable]
         public string Name { get; set; }
 
         public double Confidence { get; set; }
+        public string Hint { get; set; }
     }
+
+    public class Description
+    {
+        [IsSearchable]
+        public string[] Tags { get; set; }
+
+        [IsSearchable] 
+        public Tag[] Captions { get; set; }
+    }
+
 }

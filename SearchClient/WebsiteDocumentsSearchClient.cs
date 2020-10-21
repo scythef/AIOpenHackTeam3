@@ -91,6 +91,9 @@ namespace SearchClient
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/categories", targetFieldName: "Categories" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/tags", targetFieldName: "Tags" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/description", targetFieldName: "Description" ));
+            //outputMapping.Add(new FieldMapping(sourceFieldName: "/document/normalized_images/*/description/tags/*", targetFieldName: "Tags"));
+            //outputMapping.Add(new FieldMapping(sourceFieldName: "/document/normalized_images/*/description/captions/*", targetFieldName: "Captions"));
+            //outputMapping.Add(new FieldMapping(sourceFieldName: "/document/normalized_images/*/description/captions/tags/*", targetFieldName: "Tags"));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/faces", targetFieldName: "Faces" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/brands", targetFieldName: "Brands" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/objects", targetFieldName: "Objects" ));
