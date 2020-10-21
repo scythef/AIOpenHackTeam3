@@ -86,6 +86,18 @@ namespace SearchClient
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/locations/*", targetFieldName: "Locations" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/key_phrases/*", targetFieldName: "Key_phrases" ));
             outputMapping.Add(new FieldMapping( sourceFieldName: "/document/urls/*", targetFieldName: "Urls" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/merged_text", targetFieldName: "Merged_text" ));
+            outputMapping.Add(new FieldMapping( sourceFieldName: "/document/normalized_images/*/extracted_text", targetFieldName: "Extracted_text" ));
+
+            // required in challenge 4, tell the indexer to create content, metadata and images
+            IDictionary<string, object> idxrConfig = new Dictionary<string, object>();
+            idxrConfig.Add(
+                key: "dataToExtract",
+                value: "contentAndMetadata");
+            idxrConfig.Add(
+                key: "imageAction",
+                value: "generateNormalizedImages"
+            );
 
             Indexer blobIndexer = new Indexer(
                 name: "website-indexer",
@@ -94,6 +106,10 @@ namespace SearchClient
                 fieldMappings: mapping,
                 skillsetName: "test003",
                 schedule: new IndexingSchedule(TimeSpan.FromDays(1)),
+                parameters: new IndexingParameters(
+                    maxFailedItems: -1,
+                    maxFailedItemsPerBatch: -1,
+                    configuration: idxrConfig),
                 outputFieldMappings: outputMapping);
 
             if (_serviceClient.Indexers.Exists("website-indexer"))
