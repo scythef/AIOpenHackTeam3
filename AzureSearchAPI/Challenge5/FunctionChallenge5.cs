@@ -18,97 +18,180 @@ namespace Challenge5
 {
     public static class Function1
     {
-        [FunctionName("FunctionChallenge5")]
-        public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
+        #region classes used to serialize the response
+        private class WebApiResponseError
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            public string message { get; set; }
+        }
 
-            string name = req.Query["name"];
+        private class WebApiResponseWarning
+        {
+            public string message { get; set; }
+        }
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
+        private class WebApiResponseRecord
+        {
+            public string recordId { get; set; }
+            public Dictionary<string, object> data { get; set; }
+            public List<WebApiResponseError> errors { get; set; }
+            public List<WebApiResponseWarning> warnings { get; set; }
+        }
+
+        private class WebApiEnricherResponse
+        {
+            public List<WebApiResponseRecord> values { get; set; }
+        }
+        #endregion
+
+        [FunctionName("FunctionChallenge5")]
+        public static async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req, ILogger log)
+        {
+            try
+            {
+                log.LogInformation("C# HTTP trigger function processed a request.");
+
+                string recordId = null;
+                string originalText = null;
+
+                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                log.LogInformation(requestBody);
+                dynamic data = JsonConvert.DeserializeObject(requestBody);
+
+                if (data?.values == null)
+                    return new BadRequestObjectResult(" Could not find values array");
+
+                if (data?.values.HasValues == false || data?.values.First.HasValues == false)
+                    return new BadRequestObjectResult(" Could not find valid records in values array");
+
+                recordId = data?.values?.First?.recordId?.Value as string;
+                originalText = data?.values?.First?.data?.text?.Value as string;
+
+                if (recordId == null)
+                    return new BadRequestObjectResult("recordId cannot be null");
+
+                WebApiResponseRecord responseRecord = new WebApiResponseRecord();
+                responseRecord.data = new Dictionary<string, object>();
+                responseRecord.recordId = recordId;
+
+                if (!String.IsNullOrWhiteSpace(originalText))
+                    responseRecord.data.Add("top_words", TopFrequentWords(originalText));
+
+                WebApiEnricherResponse response = new WebApiEnricherResponse();
+                response.values = new List<WebApiResponseRecord>();
+                response.values.Add(responseRecord);
+
+                var result = JsonConvert.SerializeObject(response);
+                log.LogInformation(result);
+                return (ActionResult)new OkObjectResult(response);
+            }
+            catch (Exception e)
+            {
+                log.LogInformation(e.ToString());
+            }
+
+            return null;
 
 
 
-            // Test the function
-            string test_text = @"Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.
-                Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. We are met on a great battlefield of that war.
-                We have come to dedicate a portion of that field, as a final resting place for those who here gave their lives that that nation might live. It is altogether fitting and proper that we should do this.\
-                But, in a larger sense, we can not dedicate, we can not consecrate, we can not hallow this ground. The brave men, living and dead, who struggled here, have consecrated it, far above our poor power to add or detract.\
-                The world will little note, nor long remember what we say here, but it can never forget what they did here. It is for us the living, rather, to be dedicated here to the unfinished work which they who fought here have thus far so nobly advanced.\
-                It is rather for us to be here dedicated to the great task remaining before us that from these honored dead we take increased devotion to that cause for which they gave the last full measure of devotion, that we here highly resolve that these dead shall not have died in vain; that this nation, under God, shall have a new birth of freedom and that government of the people, by the people, for the people, shall not perish from the earth.";
 
-            word_list test_result = get_top_ten_words(test_text);
 
-            //// print the object as JSON
-            //Console.WriteLine(JsonConvert.SerializeObject(test_result));
+
+
+            //log.LogInformation("C# HTTP trigger function processed a request.");
+
+            //string name = req.Query["name"];
+
+            //string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            //dynamic data = JsonConvert.DeserializeObject(requestBody);
+            //name = name ?? data?.name;
+
+
+
+            //// Test the function
+            //string test_text = @"Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.
+            //    Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. We are met on a great battlefield of that war.
+            //    We have come to dedicate a portion of that field, as a final resting place for those who here gave their lives that that nation might live. It is altogether fitting and proper that we should do this.\
+            //    But, in a larger sense, we can not dedicate, we can not consecrate, we can not hallow this ground. The brave men, living and dead, who struggled here, have consecrated it, far above our poor power to add or detract.\
+            //    The world will little note, nor long remember what we say here, but it can never forget what they did here. It is for us the living, rather, to be dedicated here to the unfinished work which they who fought here have thus far so nobly advanced.\
+            //    It is rather for us to be here dedicated to the great task remaining before us that from these honored dead we take increased devotion to that cause for which they gave the last full measure of devotion, that we here highly resolve that these dead shall not have died in vain; that this nation, under God, shall have a new birth of freedom and that government of the people, by the people, for the people, shall not perish from the earth.";
+
+            //word_list test_result = get_top_ten_words(test_text);
+
+            ////// print the object as JSON
+            ////Console.WriteLine(JsonConvert.SerializeObject(test_result));
         
 
-            //string[] result = { "first", "second", "third" };
-            string[] result = get_top_ten_words(test_text).words.ToArray();
-            string responseMessage = JsonConvert.SerializeObject(result);
+            ////string[] result = { "first", "second", "third" };
+            //string[] result = get_top_ten_words(test_text).words.ToArray();
+            //string responseMessage = JsonConvert.SerializeObject(result);
 
 
-            //string responseMessage = string.IsNullOrEmpty(name)
-            //    ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-            //    : $"Hello, {name}. This HTTP triggered function executed successfully.";
+            ////string responseMessage = string.IsNullOrEmpty(name)
+            ////    ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
+            ////    : $"Hello, {name}. This HTTP triggered function executed successfully.";
 
 
-            var OKResult =  new OkObjectResult(responseMessage);
-            OKResult.ContentTypes.Add("application/json");
+            //var OKResult =  new OkObjectResult(responseMessage);
+            //OKResult.ContentTypes.Add("application/json");
 
-            //return OKResult;
+            ////return OKResult;
 
-            var response = new WebApiResponse
-            {
-                Values = new List<OutputRecord>()
-            };
+            //var response = new WebApiResponse
+            //{
+            //    Values = new List<OutputRecord>()
+            //};
 
-            return (ActionResult)new OkObjectResult(response);
+            //return (ActionResult)new OkObjectResult(response);
 
 
-            //HttpResponseMessage httpresponse = new HttpResponseMessage(HttpStatusCode.OK)
-            //{​
-            //    Content = new StringContent(responseMessage, Encoding.UTF8, "application/json")
-            //};​​
-            //return httpresponse;
+            ////HttpResponseMessage httpresponse = new HttpResponseMessage(HttpStatusCode.OK)
+            ////{​
+            ////    Content = new StringContent(responseMessage, Encoding.UTF8, "application/json")
+            ////};​​
+            ////return httpresponse;
         }
 
-        private class WebApiResponse
-        {
-            public List<OutputRecord> Values { get; set; }
-        }
 
-        private class OutputRecord
-        {
-            public class OutputRecordData
-            {
-                public string Name { get; set; } = "";
-                public string Description { get; set; } = "";
-                public string Source { get; set; } = "";
-                public string SourceUrl { get; set; } = "";
-                public string LicenseAttribution { get; set; } = "";
-                public string LicenseUrl { get; set; } = "";
-            }
 
-            public class OutputRecordMessage
-            {
-                public string Message { get; set; }
-            }
+        //private class WebApiResponse
+        //{
+        //    public List<OutputRecord> Values { get; set; }
+        //}
 
-            public string RecordId { get; set; }
-            public OutputRecordData Data { get; set; }
-            public List<OutputRecordMessage> Errors { get; set; }
-            public List<OutputRecordMessage> Warnings { get; set; }
-        }
+        //private class OutputRecord
+        //{
+        //    public class OutputRecordData
+        //    {
+        //        public string Name { get; set; } = "";
+        //        public string Description { get; set; } = "";
+        //        public string Source { get; set; } = "";
+        //        public string SourceUrl { get; set; } = "";
+        //        public string LicenseAttribution { get; set; } = "";
+        //        public string LicenseUrl { get; set; } = "";
+        //    }
+
+        //    public class OutputRecordMessage
+        //    {
+        //        public string Message { get; set; }
+        //    }
+
+        //    public string RecordId { get; set; }
+        //    public OutputRecordData Data { get; set; }
+        //    public List<OutputRecordMessage> Errors { get; set; }
+        //    public List<OutputRecordMessage> Warnings { get; set; }
+        //}
 
         // class for results
         public class word_list
         {
             public List<string> words { get; set; }
+        }
+
+        public static string[] TopFrequentWords(string text, int topCount = 10)
+        {
+            //var cleanText = StopwordTool.RemoveStopwords(text);
+            //return GetTopKWordsDic(cleanText, topCount).Keys.ToArray();
+            return get_top_ten_words(text).words.ToArray();
         }
 
         public static word_list get_top_ten_words(string text)
