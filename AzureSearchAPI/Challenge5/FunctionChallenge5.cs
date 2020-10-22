@@ -60,13 +60,49 @@ namespace Challenge5
             var OKResult =  new OkObjectResult(responseMessage);
             OKResult.ContentTypes.Add("application/json");
 
-            return OKResult;
+            //return OKResult;
+
+            var response = new WebApiResponse
+            {
+                Values = new List<OutputRecord>()
+            };
+
+            return (ActionResult)new OkObjectResult(response);
+
 
             //HttpResponseMessage httpresponse = new HttpResponseMessage(HttpStatusCode.OK)
             //{​
             //    Content = new StringContent(responseMessage, Encoding.UTF8, "application/json")
             //};​​
             //return httpresponse;
+        }
+
+        private class WebApiResponse
+        {
+            public List<OutputRecord> Values { get; set; }
+        }
+
+        private class OutputRecord
+        {
+            public class OutputRecordData
+            {
+                public string Name { get; set; } = "";
+                public string Description { get; set; } = "";
+                public string Source { get; set; } = "";
+                public string SourceUrl { get; set; } = "";
+                public string LicenseAttribution { get; set; } = "";
+                public string LicenseUrl { get; set; } = "";
+            }
+
+            public class OutputRecordMessage
+            {
+                public string Message { get; set; }
+            }
+
+            public string RecordId { get; set; }
+            public OutputRecordData Data { get; set; }
+            public List<OutputRecordMessage> Errors { get; set; }
+            public List<OutputRecordMessage> Warnings { get; set; }
         }
 
         // class for results
