@@ -21,7 +21,6 @@ namespace SearchClient
 
             var searchClient = new WebsiteDocumentsSearchClient(searchServiceName, adminApiKey);
 
-
             Console.WriteLine("{0}", "Deleting index...");
             searchClient.DeleteIndexIfExists();
 
@@ -30,6 +29,12 @@ namespace SearchClient
 
             Console.WriteLine("{0}", "Creating datasource...");
             searchClient.CreateDataSource(configuration);
+
+            Console.WriteLine("{0}", "Creating synonym map...");
+            searchClient.CreateSynonymMap();
+
+            Console.WriteLine("{0}", "Linking synonym map...");
+            searchClient.LinkSynonymMapsToFields();
 
             Console.WriteLine("{0}", "Creating indexer...");
             searchClient.CreateIndexer();

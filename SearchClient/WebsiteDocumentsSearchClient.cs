@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Linq;
 using System.Threading;
 using System.Collections.Generic;
 using Microsoft.Azure.Search;
@@ -32,9 +33,30 @@ namespace SearchClient
             return _serviceClient.Indexes.GetClient(_indexName);
         }
 
+        public void CreateSynonymMap()
+        {
+            var synonymMap = new SynonymMap();
+            synonymMap.Name = "desc-synonymmap";
+            //synonymMap.Format = "solr";
+            synonymMap.Synonyms = "USA, United States, America, United States of America\nUK, United Kingdom, Britain, Great Britain\nUAE, United Arab Emirates, Emirates";
+
+            _serviceClient.SynonymMaps.CreateOrUpdate(synonymMap);
+        }
+
+        public void LinkSynonymMapsToFields()
+        {
+            Microsoft.Azure.Search.Models.Index index = _serviceClient.Indexes.Get(_indexName);
+            index.Fields.First(f => f.Name == "Content").SynonymMaps = new[] { "desc-synonymmap" };
+            index.Fields.First(f => f.Name == "Locations").SynonymMaps = new[] { "desc-synonymmap" };
+            index.Fields.First(f => f.Name == "Merged_text").SynonymMaps = new[] { "desc-synonymmap" };
+            index.Fields.First(f => f.Name == "Key_phrases").SynonymMaps = new[] { "desc-synonymmap" };
+
+            _serviceClient.Indexes.CreateOrUpdate(index);
+        }
+
         // Create an index whose fields correspond to the properties of the WebsiteDocument class.
         // The fields of the index are defined by calling the FieldBuilder.BuildForType() method.
-        private static void CreateIndex(string indexName, SearchServiceClient serviceClient)
+        private void CreateIndex(string indexName, SearchServiceClient serviceClient)
         {
             var definition = new Microsoft.Azure.Search.Models.Index()
             {
