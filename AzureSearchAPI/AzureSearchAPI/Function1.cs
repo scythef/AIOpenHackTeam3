@@ -110,26 +110,39 @@ namespace AzureSearchAPI
             }
 
 
-            Console.WriteLine($"Images Grand Canyon ----------------------------------------\n");
+            //Console.WriteLine($"Images Grand Canyon ----------------------------------------\n");
+
+            //options = new SearchOptions()
+            //{
+            //    Filter = "Locations/any(loc: loc eq 'Broadway')",
+            //};
+
+            //SearchResults<SearchDocument> response6 = client.Search<SearchDocument>("*", options);
+            //foreach (SearchResult<SearchDocument> result in response6.GetResults())
+            //{
+            //    //string title = (string)result.Document["File_name"];
+            //    //double score = (double)result.Document["Sentiment_score"];
+            //    //string loc = "";// (List<string>)result.Document["Locations"]; 
+            //    //string merged = (string)result.Document["Merged_text"];
+            //    string extracted = (string)result.Document["Extracted_text"];
+            //    string description = (string)result.Document["Description"];
+            //    Console.WriteLine($"{extracted}\n || {description}\n");
+            //}
+
+            Console.WriteLine($"Locations ----------------------------------------\n");
 
             options = new SearchOptions()
-            {
-                Filter = "Locations/any(loc: loc eq 'Broadway')",
+            {                
             };
+            options.OrderBy.Add("Size desc");
 
-            SearchResults<SearchDocument> response6 = client.Search<SearchDocument>("*", options);
-            foreach (SearchResult<SearchDocument> result in response6.GetResults())
+            SearchResults<SearchDocument> response7 = client.Search<SearchDocument>("*", options);
+            foreach (SearchResult<SearchDocument> result in response7.GetResults())
             {
-                //string title = (string)result.Document["File_name"];
-                //double score = (double)result.Document["Sentiment_score"];
-                //string loc = "";// (List<string>)result.Document["Locations"]; 
-                //string merged = (string)result.Document["Merged_text"];
-                string extracted = (string)result.Document["Extracted_text"];
-                string description = (string)result.Document["Description"];
-                Console.WriteLine($"{extracted}\n || {description}\n");
+                string title = (string)result.Document["File_name"];
+                int size = (int)result.Document["Size"];
+                Console.WriteLine($"{title} || {size}\n");
             }
-
-
 
             //Console.WriteLine($"Las Vegas +reviews ----------------------------------------\n");
 
