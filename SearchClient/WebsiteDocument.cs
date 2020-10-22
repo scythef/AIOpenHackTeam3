@@ -72,7 +72,7 @@ namespace SearchClient
         [IsSearchable, IsFilterable]
         public string[] Landmarks { get; set; }
 
-        [IsSearchable]
+        [IsSearchable,IsFilterable]
         public string[] top_words {get; set;} 
     }
 
