@@ -61,7 +61,12 @@ namespace SearchClient
             var definition = new Microsoft.Azure.Search.Models.Index()
             {
                 Name = indexName,
-                Fields = FieldBuilder.BuildForType<WebsiteDocument>()
+                Fields = FieldBuilder.BuildForType<WebsiteDocument>(),
+                Suggesters = new List<Suggester>() {new Suggester()
+                {
+                    Name = "sg",
+                    SourceFields = new string[] { "Locations" }
+                }}
             };
 
             serviceClient.Indexes.Create(definition);
