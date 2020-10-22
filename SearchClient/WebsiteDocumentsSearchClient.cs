@@ -58,15 +58,46 @@ namespace SearchClient
         // The fields of the index are defined by calling the FieldBuilder.BuildForType() method.
         private void CreateIndex(string indexName, SearchServiceClient serviceClient)
         {
+            var scoringFunctions = new List<ScoringFunction>();
+
+            scoringFunctions.Add(new FreshnessScoringFunction
+            {
+                Boost = 10,
+                FieldName = "Last_modified",
+                Parameters = new FreshnessScoringParameters(new TimeSpan(2400, 0, 0)),
+                Interpolation = ScoringFunctionInterpolation.Quadratic
+            });
+
+            scoringFunctions.Add(new MagnitudeScoringFunction
+            {
+                Boost = 10,
+                FieldName = "Size",
+                Parameters = new MagnitudeScoringParameters(1, 100, true),
+                Interpolation = ScoringFunctionInterpolation.Linear
+            });
+
+            var scoringWeights = new Dictionary<string, double>{
+                {"Key_phrases", 10}
+            };
+
+            var scoringProfiles = new List<ScoringProfile>{
+                new ScoringProfile(
+                    name: "booster",
+                    textWeights: new TextWeights(scoringWeights),
+                    functions: scoringFunctions
+                )
+            };
+
             var definition = new Microsoft.Azure.Search.Models.Index()
             {
                 Name = indexName,
                 Fields = FieldBuilder.BuildForType<WebsiteDocument>(),
-                Suggesters = new List<Suggester>() {new Suggester()
+                Suggesters = new List<Suggester>() { new Suggester()
                 {
                     Name = "sg",
                     SourceFields = new string[] { "Locations" }
-                }}
+                } },
+                ScoringProfiles = scoringProfiles
             };
 
             serviceClient.Indexes.Create(definition);
